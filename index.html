@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Baseten vs Nebius Token Factory — DeepSeek V4 Flash pricing</title>
+<meta name="description" content="A cost comparison of DeepSeek V4 Flash inference on Baseten and Nebius Token Factory at high throughput. List prices are within 8% — prompt caching is the real differentiator.">
+<style>
+  :root {
+    color-scheme: light;
+    --surface-1:      #fcfcfb;
+    --page:           #f9f9f7;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --gridline:       #e1e0d9;
+    --baseline:       #c3c2b7;
+    --border:         rgba(11,11,11,0.10);
+    --series-1:       #2a78d6;
+    --series-2:       #eb6834;
+    --accent-wash:    rgba(42,120,214,0.07);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --surface-1:      #1a1a19;
+      --page:           #0d0d0d;
+      --text-primary:   #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted:     #898781;
+      --gridline:       #2c2c2a;
+      --baseline:       #383835;
+      --border:         rgba(255,255,255,0.10);
+      --series-1:       #3987e5;
+      --series-2:       #d95926;
+      --accent-wash:    rgba(57,135,229,0.10);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface-1:      #1a1a19;
+    --page:           #0d0d0d;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #898781;
+    --gridline:       #2c2c2a;
+    --baseline:       #383835;
+    --border:         rgba(255,255,255,0.10);
+    --series-1:       #3987e5;
+    --series-2:       #d95926;
+    --accent-wash:    rgba(57,135,229,0.10);
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 17px;
+    line-height: 1.65;
+  }
+  .wrap { max-width: 820px; margin: 0 auto; padding: 56px 24px 96px; }
+
+  header { margin-bottom: 44px; }
+  .eyebrow {
+    font-size: 13px; font-weight: 600; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--text-muted); margin: 0 0 12px;
+  }
+  h1 {
+    font-size: clamp(28px, 5vw, 40px); line-height: 1.15;
+    margin: 0 0 16px; letter-spacing: -0.02em; font-weight: 650;
+  }
+  .standfirst { font-size: 19px; color: var(--text-secondary); margin: 0 0 20px; }
+  .meta { font-size: 14px; color: var(--text-muted); margin: 0; }
+
+  h2 {
+    font-size: 22px; margin: 52px 0 14px; letter-spacing: -0.01em;
+    font-weight: 640; scroll-margin-top: 24px;
+  }
+  h3 { font-size: 17px; margin: 32px 0 8px; font-weight: 640; }
+  p { margin: 0 0 16px; }
+  a { color: var(--series-1); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+
+  .callout {
+    background: var(--accent-wash);
+    border-left: 3px solid var(--series-1);
+    border-radius: 0 8px 8px 0;
+    padding: 18px 22px; margin: 28px 0;
+  }
+  .callout p { margin: 0; }
+  .callout p + p { margin-top: 12px; }
+
+  .table-scroll { overflow-x: auto; margin: 22px 0; }
+  table {
+    width: 100%; border-collapse: collapse; font-size: 15px;
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 10px; overflow: hidden;
+  }
+  caption {
+    caption-side: top; text-align: left; font-size: 14px;
+    color: var(--text-muted); padding-bottom: 10px;
+  }
+  th, td { padding: 11px 16px; text-align: right; white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; }
+  thead th {
+    font-size: 13px; font-weight: 620; color: var(--text-secondary);
+    border-bottom: 1px solid var(--baseline); background: var(--surface-1);
+  }
+  tbody tr + tr td { border-top: 1px solid var(--gridline); }
+  td { font-variant-numeric: tabular-nums; color: var(--text-secondary); }
+  td:first-child { color: var(--text-primary); }
+  .win { color: var(--text-primary); font-weight: 620; }
+  .na { color: var(--text-muted); }
+
+  .swatch {
+    display: inline-block; width: 9px; height: 9px; border-radius: 2px;
+    margin-right: 7px; vertical-align: baseline;
+  }
+  .sw1 { background: var(--series-1); }
+  .sw2 { background: var(--series-2); }
+
+  figure {
+    margin: 30px 0; background: var(--surface-1);
+    border: 1px solid var(--border); border-radius: 12px; padding: 22px 20px 16px;
+  }
+  .fig-title { font-size: 16px; font-weight: 620; margin: 0 0 3px; }
+  .fig-sub { font-size: 14px; color: var(--text-muted); margin: 0 0 6px; }
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; margin: 10px 0 4px; font-size: 14px; color: var(--text-secondary); }
+  .legend span { display: flex; align-items: center; }
+  figcaption { font-size: 13px; color: var(--text-muted); margin-top: 10px; line-height: 1.5; }
+  svg { display: block; width: 100%; height: auto; touch-action: pan-y; }
+
+  .tick { font-size: 12px; fill: var(--text-muted); font-variant-numeric: tabular-nums; }
+  .dlabel { font-size: 12.5px; font-weight: 620; }
+
+  #tip {
+    position: absolute; pointer-events: none; opacity: 0;
+    transition: opacity .1s; background: var(--surface-1);
+    border: 1px solid var(--baseline); border-radius: 8px;
+    padding: 9px 12px; font-size: 13px; line-height: 1.5;
+    box-shadow: 0 4px 14px rgba(0,0,0,.13); z-index: 10;
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  #tip b { font-weight: 620; }
+  .fig-rel { position: relative; }
+
+  ul { margin: 0 0 16px; padding-left: 22px; }
+  li { margin-bottom: 7px; }
+
+  footer {
+    margin-top: 64px; padding-top: 26px; border-top: 1px solid var(--gridline);
+    font-size: 14px; color: var(--text-muted);
+  }
+  footer a { color: var(--text-secondary); }
+  footer ul { padding-left: 20px; }
+  footer li { margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">Inference pricing analysis</p>
+  <h1>Baseten vs Nebius Token Factory for DeepSeek V4 Flash</h1>
+  <p class="standfirst">The list prices sit within 8% of each other. Prompt caching, not the rate card, decides which one is cheaper — and the gap it opens reaches 74%.</p>
+  <p class="meta">Published 12 August 2026 · Prices verified against vendor sources on that date</p>
+</header>
+
+<div class="callout">
+  <p><b>The short version.</b> Baseten lists DeepSeek V4 Flash at $0.13/$0.26 per 1M input/output tokens; Nebius Token Factory lists $0.14/$0.28. That 7.7% spread is noise. The decisive difference is that Baseten prices cached input at $0.028/1M — a 78% discount — while Nebius has no billable prompt caching at all.</p>
+  <p>On a workload with no prefix reuse the two are interchangeable on cost. On an agentic workload with 90% cache hits, Baseten costs 42% less.</p>
+</div>
+
+<h2>List pricing</h2>
+
+<div class="table-scroll">
+<table>
+  <caption>DeepSeek V4 Flash 0731, per 1M tokens, August 2026</caption>
+  <thead>
+    <tr><th>Provider</th><th>Input</th><th>Cached input</th><th>Output</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><span class="swatch sw1"></span>Baseten</td><td class="win">$0.13</td><td class="win">$0.028</td><td class="win">$0.26</td></tr>
+    <tr><td><span class="swatch sw2"></span>Nebius Token Factory</td><td>$0.14</td><td class="na">none</td><td>$0.28</td></tr>
+    <tr><td>Difference</td><td>+7.7%</td><td class="na">—</td><td>+7.7%</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>Nebius is uniformly 7.7% above Baseten on both directions, so the input/output mix of a workload changes absolute spend but not the ratio between the two providers. Nebius serves the model from <code>us-central1</code>; both quote roughly comparable throughput, discussed below.</p>
+
+<h2>Prompt caching is the whole story</h2>
+
+<p>Baseten's cached-input rate of $0.028/1M is 78% off its own list input price. Nebius does not currently bill cached input at a discount — an <a href="https://ideas.nebius.com/p/support-impliciteexplicite-prompt-caching">open feature request</a> from March 2026 asks for exactly this, observing that the platform is at a disadvantage in repeated, input-heavy scenarios.</p>
+
+<p>This matters disproportionately for DeepSeek V4 Flash specifically, because the model is positioned for coding and agentic workloads. Agentic loops are the maximal caching case: every tool call re-sends the accumulated conversation as a shared prefix, so input cache hit rates of 70–90% are typical rather than optimistic.</p>
+
+<h2>Cost at a reference workload</h2>
+
+<p>The scenario below is a round high-throughput reference point, not a measurement of any particular deployment: <b>2M tokens/minute at 1,000 requests/minute</b> — 2,000 tokens per request, a 70/30 input/output split, sustained across a 30-day month. That works out to roughly 86B tokens/month.</p>
+
+<figure class="fig-rel">
+  <p class="fig-title">Monthly cost as input cache hit rate rises</p>
+  <p class="fig-sub">2M tokens/min · 1,000 req/min · 70/30 input/output · 30-day month</p>
+  <div class="legend">
+    <span><span class="swatch sw1"></span>Baseten</span>
+    <span><span class="swatch sw2"></span>Nebius Token Factory</span>
+  </div>
+  <div id="tip" role="status" aria-live="polite"></div>
+  <svg id="chart" viewBox="0 0 720 372" role="img" aria-label="Line chart of monthly inference cost against input cache hit rate. Nebius stays flat at about 15,700 dollars per month because it has no cached-input discount. Baseten falls from about 14,600 dollars at zero cache hits to about 9,000 dollars at 90 percent cache hits.">
+    <g class="tick" text-anchor="end">
+      <text x="60" y="34">$18k</text>
+      <text x="60" y="104">$13.5k</text>
+      <text x="60" y="174">$9k</text>
+      <text x="60" y="244">$4.5k</text>
+      <text x="60" y="314">$0</text>
+    </g>
+    <g stroke="var(--gridline)" stroke-width="1">
+      <line x1="70" y1="30"  x2="690" y2="30"/>
+      <line x1="70" y1="100" x2="690" y2="100"/>
+      <line x1="70" y1="170" x2="690" y2="170"/>
+      <line x1="70" y1="240" x2="690" y2="240"/>
+    </g>
+    <line x1="70" y1="310" x2="690" y2="310" stroke="var(--baseline)" stroke-width="1"/>
+
+    <g class="tick" text-anchor="middle">
+      <text x="70"  y="332">0%</text>
+      <text x="276.7" y="332">30%</text>
+      <text x="483.3" y="332">60%</text>
+      <text x="690" y="332">90%</text>
+    </g>
+    <text class="tick" x="380" y="356" text-anchor="middle">Input cache hit rate</text>
+
+    <!-- Nebius: flat, no caching -->
+    <polyline fill="none" stroke="var(--series-2)" stroke-width="2" stroke-linecap="round"
+      points="70,65.4 690,65.4"/>
+    <!-- Baseten: declines with cache hits -->
+    <polyline fill="none" stroke="var(--series-1)" stroke-width="2" stroke-linecap="round"
+      points="70,82.9 173.3,97.3 276.7,111.7 380,126.1 483.3,140.4 586.7,154.8 690,169.2"/>
+
+    <g id="hoverdots" opacity="0">
+      <circle id="d2" r="4.5" fill="var(--series-2)" stroke="var(--surface-1)" stroke-width="2"/>
+      <circle id="d1" r="4.5" fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="2"/>
+    </g>
+    <line id="cross" x1="0" y1="30" x2="0" y2="310" stroke="var(--baseline)" stroke-width="1" opacity="0"/>
+
+    <text class="dlabel" x="683" y="57"  text-anchor="end" fill="var(--series-2)">Nebius $15.7k</text>
+    <text class="dlabel" x="683" y="186" text-anchor="end" fill="var(--series-1)">Baseten $9.0k</text>
+
+    <rect id="hit" x="70" y="30" width="620" height="280" fill="transparent"/>
+  </svg>
+  <figcaption>Nebius is flat because every input token bills at full rate regardless of prefix reuse. The lines cross immediately — Baseten starts cheaper and the gap only widens.</figcaption>
+</figure>
+
+<div class="table-scroll">
+<table>
+  <caption>Estimated monthly cost at the reference workload</caption>
+  <thead>
+    <tr><th>Input cache hit rate</th><th>Baseten</th><th>Nebius</th><th>Nebius premium</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>0% (no prefix reuse)</td><td class="win">$14,602</td><td>$15,725</td><td>+8%</td></tr>
+    <tr><td>25%</td><td class="win">$13,059</td><td>$15,725</td><td>+20%</td></tr>
+    <tr><td>50%</td><td class="win">$11,517</td><td>$15,725</td><td>+37%</td></tr>
+    <tr><td>75%</td><td class="win">$9,975</td><td>$15,725</td><td>+58%</td></tr>
+    <tr><td>90% (agentic loop)</td><td class="win">$9,050</td><td>$15,725</td><td>+74%</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>Volume discounts can invert this</h2>
+
+<p>Nebius publishes a volume ladder running from 10% off at 1M tokens/month to <b>50% off at 1B tokens/month</b>, plus a Batch API offering a further 20–30% for non-realtime work. A workload at the reference scale sits far past the top published rung. At a full 50% discount Nebius lands near $7,900/month, which would beat Baseten's list price by roughly 46% and edge out even the 90%-cache Baseten case.</p>
+
+<p>Baseten also offers volume discounts across all tiers. Neither vendor publishes what a committed contract actually costs at this scale, so the list-price comparison above is the floor of the analysis rather than the conclusion — anyone operating at this volume should price both against their own traffic profile.</p>
+
+<h2>Rate limits differ more than prices do</h2>
+
+<div class="table-scroll">
+<table>
+  <caption>Published self-serve throughput ceilings</caption>
+  <thead>
+    <tr><th>Provider</th><th>Requests/min</th><th>Tokens/min</th><th>Beyond that</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Baseten — Basic (verified)</td><td>120</td><td>500,000</td><td>Contact sales</td></tr>
+    <tr><td>Baseten — Pro</td><td>120</td><td>1,000,000</td><td>Enterprise, custom</td></tr>
+    <tr><td>Nebius — Startup</td><td>~3,000</td><td>~1,000,000</td><td>Auto-scales to 20× base</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>Baseten's self-serve tiers cap at 120 RPM regardless of plan, which is roughly an eighth of the reference workload's request rate — reaching it requires an Enterprise agreement. Nebius raises limits dynamically, growing 20% per 15-minute window while utilisation stays above 80%, up to 20× the base allocation before an Enterprise plan is needed.</p>
+
+<p>The practical consequence is that Nebius can be scaled into without a sales cycle, while Baseten cannot. For teams that need to be in production before a contract closes, that operational difference may outweigh a double-digit cost gap.</p>
+
+<h2>Throughput</h2>
+
+<p>Nebius's own console advertises 291.77 tok/s for this model. Artificial Analysis, measuring independently, puts Nebius at 252 tok/s and Baseten at 273 tok/s. A vendor self-report and a third-party benchmark are not directly comparable, and neither reflects the prompt shapes of any given application — treat throughput as a wash pending a first-party test.</p>
+
+<h2>Method and caveats</h2>
+
+<ul>
+  <li>Costs are computed from published per-token rates at the stated reference workload; they exclude volume discounts, committed-use pricing, and batch rates.</li>
+  <li>A 30-day month at continuous full utilisation is assumed. Real traffic is bursty, so these figures are ceilings for a workload with that peak rate.</li>
+  <li>The 70/30 input/output split is illustrative. Because Nebius's premium is identical on both directions, changing the split moves both providers proportionally.</li>
+  <li>Cache hit rate refers to input tokens served from a matched prefix. Output tokens never cache and bill at full rate for both providers.</li>
+  <li>Nebius pricing was read directly from the Token Factory console. Third-party aggregators carried a materially different figure for this model — worth verifying any rate against the vendor's own console before relying on it.</li>
+  <li>Dedicated GPU hosting was considered and excluded: at this throughput, sustaining the decode load would take substantially more accelerator capacity than the equivalent per-token spend buys at either vendor's published GPU rates.</li>
+</ul>
+
+<footer>
+  <p><b>Sources</b></p>
+  <ul>
+    <li><a href="https://www.baseten.co/pricing/">Baseten pricing</a></li>
+    <li><a href="https://docs.baseten.co/inference/model-apis/rate-limits-and-budgets">Baseten rate limits and budgets</a></li>
+    <li>Nebius Token Factory console — model catalog pricing</li>
+    <li><a href="https://docs.tokenfactory.nebius.com/ai-models-inference/rate-limits">Nebius Token Factory rate limits</a></li>
+    <li><a href="https://ideas.nebius.com/p/support-impliciteexplicite-prompt-caching">Nebius feature request: prompt caching</a></li>
+    <li><a href="https://artificialanalysis.ai/models/deepseek-v4-flash/providers">Artificial Analysis — DeepSeek V4 Flash providers</a></li>
+  </ul>
+  <p>Pricing changes frequently. Verify current rates with each vendor before making a decision.</p>
+</footer>
+
+</div>
+
+<script>
+(function () {
+  var X0 = 70, X1 = 690, Y0 = 310, YMAX = 18000, H = 280;
+  var svg = document.getElementById('chart');
+  var hit = document.getElementById('hit');
+  var tip = document.getElementById('tip');
+  var cross = document.getElementById('cross');
+  var dots = document.getElementById('hoverdots');
+  var d1 = document.getElementById('d1'), d2 = document.getElementById('d2');
+
+  var NEBIUS = 15724.80;
+  function baseten(h) {           // h = cache hit rate, 0..0.9
+    var input = 1.4 * (0.13 * (1 - h) + 0.028 * h);
+    return (input + 0.6 * 0.26) * 43200;
+  }
+  function y(v) { return Y0 - (v / YMAX) * H; }
+  function money(v) {
+    return '$' + Math.round(v).toLocaleString('en-US');
+  }
+
+  function move(evt) {
+    var r = svg.getBoundingClientRect();
+    var cx = evt.touches ? evt.touches[0].clientX : evt.clientX;
+    var px = (cx - r.left) / r.width * 720;
+    px = Math.max(X0, Math.min(X1, px));
+    var h = (px - X0) / (X1 - X0) * 0.9;
+    var bt = baseten(h);
+
+    cross.setAttribute('x1', px); cross.setAttribute('x2', px);
+    cross.setAttribute('opacity', '1');
+    dots.setAttribute('opacity', '1');
+    d1.setAttribute('cx', px); d1.setAttribute('cy', y(bt));
+    d2.setAttribute('cx', px); d2.setAttribute('cy', y(NEBIUS));
+
+    tip.innerHTML =
+      '<b>' + Math.round(h * 100) + '% cache hits</b><br>' +
+      'Baseten &nbsp;<b>' + money(bt) + '</b><br>' +
+      'Nebius &nbsp;<b>' + money(NEBIUS) + '</b><br>' +
+      '<span style="color:var(--text-muted)">Nebius +' +
+        Math.round((NEBIUS / bt - 1) * 100) + '%</span>';
+    tip.style.opacity = '1';
+
+    var left = px / 720 * r.width + 16;
+    if (left > r.width - 150) left -= 166;
+    tip.style.left = left + 'px';
+    tip.style.top = (y(bt) / 372 * r.height - 10) + 'px';
+  }
+
+  function leave() {
+    tip.style.opacity = '0';
+    cross.setAttribute('opacity', '0');
+    dots.setAttribute('opacity', '0');
+  }
+
+  hit.addEventListener('mousemove', move);
+  hit.addEventListener('mouseleave', leave);
+  hit.addEventListener('touchstart', move, { passive: true });
+  hit.addEventListener('touchmove', move, { passive: true });
+  hit.addEventListener('touchend', leave);
+})();
+</script>
+</body>
+</html>
