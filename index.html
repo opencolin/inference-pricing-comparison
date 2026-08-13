@@ -270,11 +270,13 @@
 </table>
 </div>
 
-<h2>Volume discounts can invert this</h2>
+<h2>Volume discounts are unpublished</h2>
 
-<p>Nebius publishes a volume ladder running from 10% off at 1M tokens/month to <b>50% off at 1B tokens/month</b>, plus a Batch API offering a further 20–30% for non-realtime work. A workload at the reference scale sits far past the top published rung. At a full 50% discount Nebius lands near $7,900/month, which would beat Baseten's list price by roughly 46% and edge out even the 90%-cache Baseten case.</p>
+<p>Both vendors offer volume discounts and neither publishes the numbers. Nebius promises "volume discounts as you scale"; Baseten offers them across all tiers. No threshold or percentage appears in either vendor's own documentation.</p>
 
-<p>Baseten also offers volume discounts across all tiers. Neither vendor publishes what a committed contract actually costs at this scale, so the list-price comparison above is the floor of the analysis rather than the conclusion — anyone operating at this volume should price both against their own traffic profile.</p>
+<p>Third-party aggregators circulate a specific Nebius ladder — 10% off at 1M tokens/month rising to 50% at 1B — attributed to Nebius pricing but with no verifiable citation, and those figures appear nowhere on Nebius's own site. This analysis does not rely on them, and neither should a procurement decision.</p>
+
+<p>What the verified list prices do support: Nebius would need roughly a <b>7% discount</b> to match Baseten at zero cache reuse, and roughly <b>42%</b> to match it at 90% cache hits. Whether either vendor offers that is a question for a quote, not a rate card — anyone operating at this volume should price both against their own traffic profile.</p>
 
 <h2>Rate limits differ more than prices do</h2>
 
@@ -307,7 +309,7 @@
   <li>A 30-day month at continuous full utilisation is assumed. Real traffic is bursty, so these figures are ceilings for a workload with that peak rate.</li>
   <li>The 70/30 input/output split is illustrative. Because Nebius's premium is identical on both directions, changing the split moves both providers proportionally.</li>
   <li>Cache hit rate refers to input tokens served from a matched prefix. Output tokens never cache and bill at full rate for both providers.</li>
-  <li>Nebius pricing was read directly from the Token Factory console. Third-party aggregators carried a materially different figure for this model — worth verifying any rate against the vendor's own console before relying on it.</li>
+  <li>Nebius pricing was read directly from the Token Factory console. Third-party aggregators carried a materially different figure for this model — more than 2× off — and separately circulate volume-discount tiers that Nebius itself does not publish. Verify any rate against the vendor's own console before relying on it.</li>
   <li>Dedicated GPU hosting was considered and excluded: at this throughput, sustaining the decode load would take substantially more accelerator capacity than the equivalent per-token spend buys at either vendor's published GPU rates.</li>
 </ul>
 

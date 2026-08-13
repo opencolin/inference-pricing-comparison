@@ -21,7 +21,7 @@ A cost comparison of serving [DeepSeek V4 Flash](https://artificialanalysis.ai/m
 | 50% | $11,517 | $15,725 | +37% |
 | 90% | $9,050 | $15,725 | +74% |
 
-Two things can invert this: Nebius publishes a volume ladder reaching **50% off at 1B tokens/month**, and Baseten's self-serve tiers cap at **120 RPM**, so the reference workload requires an Enterprise agreement there. See the full write-up for both.
+Two caveats. Both vendors offer volume discounts and **neither publishes the numbers** — Nebius would need roughly 7% off to match Baseten at zero cache reuse, or 42% at 90% hits, but whether that's on offer is a question for a quote. And Baseten's self-serve tiers cap at **120 RPM**, so the reference workload requires an Enterprise agreement there. See the full write-up for both.
 
 ## Running locally
 
